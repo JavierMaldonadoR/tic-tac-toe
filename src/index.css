@@ -15,11 +15,11 @@
   -webkit-text-size-adjust: 100%;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  justify-content: center;
-  min-width: 320px;
+#root {
+  padding: 0 !important; /* Override default padding */
+}
+
+body, html {
   min-height: 100vh;
 }
 
@@ -34,14 +34,25 @@ body {
   gap: 20px;
   flex-direction: column;
   width: fit-content;
-  margin: 40px auto;
+  margin: auto;
   text-align: center;
+  justify-content: center;
+  min-height: 100vh;
+  height: 100vh;
 }
 
 .board h1 {
-  font-size: 40px;
+  font-size: 60px;
   color: #eee;
   margin-bottom: 16px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.board h2 {
+  font-size: 16px;
+  font-style: italic;
+  color: #eee;
+  margin-bottom: 0px;
 }
 
 .board button {
@@ -50,11 +61,12 @@ body {
   background: transparent;
   border: 2px solid #eee;
   color: #eee;
-  width: 100px;
+  width: auto;
   border-radius: 5px;
   transition: 0.2s;
   font-weight: bold;
   cursor: pointer;
+  font-size: 16px;
 }
 
 .board button:hover, .square:hover {
@@ -66,6 +78,20 @@ body {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+.board .game-container {
+  transition: all 0.5s;
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .turn {
@@ -137,16 +163,14 @@ body {
   font-size: 48px;
 }
 
-.reset {
-  top: 10px;
-  right: 10px;
-  padding: 8px 12px;
+.disabled,
+.board button.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.disabled:hover,
+.board button.disabled:hover {
   background: transparent;
-  border: 2px solid #eee;
-  color: #eee;
-  border-radius: 5px;
-  transition: 0.2s;
-  font-weight: bold;
-  cursor: pointer;
-  font-size: 18px;
+  color: inherit;
 }

@@ -8,9 +8,23 @@ import { checkWinnerFrom } from './logic/board.js'
 import { saveGameFromStorage, resetGameFromStorage } from './logic/storage/index.js'
 
 function App() {
+  const [gameStarted, setGameStarted] = useState(false)
+
+  const startGame = () => {
+    setGameStarted(true)
+  }
+
+  const closeGame = () => {
+    setGameStarted(false)
+    resetGame()
+  }
+
   const [board, setBoard] = useState(() => {
     const boardFromStorage = window.localStorage.getItem('board')
-    if (boardFromStorage) return JSON.parse(boardFromStorage)
+    if (boardFromStorage) {
+      setGameStarted(true)
+      return JSON.parse(boardFromStorage)
+    }
     return Array(9).fill(null)
   })
 
@@ -54,36 +68,53 @@ function App() {
   }
 
   return (
-    <main className='board'>
-      <h1>Tic Tac Toe</h1>
-      <>
-        <section className='game'>
-          {
-            board.map((_, index) => {
-              return (
-                <Square
-                  key={index}
-                  index={index}
-                  updateBoard={updateBoard}
-                >
-                  {board[index]}
-                </Square>
-              )
-            })
-          }
-        </section>
+    <div className='container'>
+      <main className='board'>
+        <h1 className='title'>Tic Tac Toe</h1>
+        {!gameStarted ? (
+          <>
+            <h2>Project inspired by @<a href="https://x.com/midudev">midudev</a> and made with React</h2>
+            <span>Visit my site <a href="https://www.javiermaldonadorivera.com">javiermaldonadorivera.com</a></span>
+            <button onClick={startGame}>Start Game</button>
+          </>
+        ) : (
+          <section className='game-container'>
+            <section className='game'>
+              {
+                board.map((_, index) => {
+                  return (
+                    <Square
+                      key={index}
+                      index={index}
+                      updateBoard={updateBoard}
+                    >
+                      {board[index]}
+                    </Square>
+                  )
+                })
+              }
+            </section>
 
-        <section className='turn'>
-          <span>Current Turn: </span>
-          <Square isSelected={true}>{turn}</Square>
-        </section>
-        
-        <section>
-          <button className='reset' onClick={resetGame}>Reset game</button>
-        </section>
-        <WinnerModal winner={winner} resetGame={resetGame} />
-      </>
-    </main>
+            <section className='turn'>
+              <span>Current Turn: </span>
+              <Square isSelected={true}>{turn}</Square>
+            </section>
+            
+            <section>
+              <button 
+                className={board.every(square => square === null) ? 'disabled' : ''} 
+                disabled={board.every(square => square === null)} 
+                onClick={resetGame}
+              >
+                Reset game
+              </button>
+              <button onClick={closeGame}>Close Game</button>
+            </section>
+            <WinnerModal winner={winner} resetGame={resetGame} />
+          </section>
+        )}
+      </main>
+    </div>
   )
 }
 
