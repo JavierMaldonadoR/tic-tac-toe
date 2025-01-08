@@ -78,11 +78,15 @@ body, html {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+  width: fit-content;
 }
 
 .board .game-container {
   transition: all 0.5s;
   animation: fadeIn 1s ease-in-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 @keyframes fadeIn {
@@ -111,7 +115,6 @@ body, html {
   width: 70px;
   height: 70px;
   pointer-events: none;
-  border-color: transparent;
 }
 
 .square.is-selected {
@@ -130,7 +133,11 @@ body, html {
   background-color: rgba(0, 0, 0, 0.7);
 }
 
-.winner .text {
+.winner h2 {
+  font-size: 20px;
+}
+
+.winner .modal {
   background: #111;
   height: 300px;
   width: 320px;
@@ -152,6 +159,10 @@ body, html {
   gap: 15px;
 }
 
+.winner button {
+  margin: 0;
+}
+
 .square {
   width: 100px;
   height: 100px;
@@ -161,6 +172,7 @@ body, html {
   place-items: center;
   cursor: pointer;
   font-size: 48px;
+  padding-bottom: 5px;
 }
 
 .disabled,
@@ -173,4 +185,30 @@ body, html {
 .board button.disabled:hover {
   background: transparent;
   color: inherit;
+}
+
+.players {
+  width: auto;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 25px;
+}
+
+.players input {
+  height: 30px;
+  border-radius: 4px;
+  padding: 16px;
+  font-size: 16px;
+}
+
+@media screen and (max-width: 768px) {
+  .players {
+    flex-direction: column;
+  }
+
+  .turn {
+    flex-direction: column;
+    font-size: 24px;
+  }
 }

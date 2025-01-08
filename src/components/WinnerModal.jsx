@@ -1,14 +1,14 @@
 import { Square } from "./Square"
 
-export function WinnerModal({ winner, resetGame }) {
+export function WinnerModal({ winner, winnerName, resetGame }) {
   if (winner === null) return null
 
   const winnerText = winner === false ? 'It\'s a draw!' : `The Winner is`
 
   return (
     <section className='winner'>
-      <div className='text'>
-        <h2>{winnerText}</h2>
+      <div className='modal'>
+        <h2>{winnerText} <span>{winnerName}</span></h2>
         {winner && (
           <header className='win'>
             <Square>{winner}</Square>
