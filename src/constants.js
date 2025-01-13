@@ -13,3 +13,14 @@ export const WINNER_COMBOS = [
     [0, 4, 8],
     [2, 4, 6]
 ]
+
+export const PLAYERS_NAMES = {
+    player1: {
+        name: 'Player 1',
+        symbol: TURNS.X
+    },
+    player2: {
+        name: 'Player 2',
+        symbol: TURNS.O
+    }
+}

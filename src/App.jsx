@@ -2,9 +2,9 @@ import confetti from 'canvas-confetti'
 import { useState } from 'react'
 import { Square } from './components/Square.jsx'
 import { WinnerModal } from './components/WinnerModal.jsx'
-import { TURNS } from './constants.js'
+import { PLAYERS_NAMES, TURNS } from './constants.js'
 import { checkWinnerFrom } from './logic/board.js'
-import { saveGameFromStorage, resetGameFromStorage } from './logic/storage/index.js'
+import { saveBoardFromStorage, resetBoardFromStorage, savePlayerNamesFromStorage, resetPlayerNamesFromStorage } from './logic/storage/index.js'
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
@@ -15,22 +15,19 @@ function App() {
 
   const closeGame = () => {
     setGameStarted(false)
+    resetPlayerNamesFromStorage()
+    updatePlayerNames(PLAYERS_NAMES)
+
     resetGame()
   }
 
   const [playerNames, setPlayerNames] = useState(() => {
     const playerNamesFromStorage = window.localStorage.getItem('playerNames')
-    if (playerNamesFromStorage) return JSON.parse(playerNamesFromStorage)
-    return {
-      player1:{
-        name: 'Player 1',
-        symbol: TURNS.X
-      },
-      player2:{
-        name: 'Player 2',
-        symbol: TURNS.O
-      }  
-    }
+    if (playerNamesFromStorage) {
+      setGameStarted(true)
+      return JSON.parse(playerNamesFromStorage)
+    } 
+    return PLAYERS_NAMES
   })
 
   const [board, setBoard] = useState(() => {
@@ -63,7 +60,7 @@ function App() {
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X
     setTurn(newTurn)
 
-    saveGameFromStorage(newBoard, newTurn)
+    saveBoardFromStorage(newBoard, newTurn)
 
     const newWinner = checkWinnerFrom(newBoard)
     if (newWinner) {
@@ -76,22 +73,17 @@ function App() {
     }
   }
 
+  const updatePlayerNames = (playerNames) => {
+    setPlayerNames(playerNames)
+    savePlayerNamesFromStorage(playerNames)
+  }
+
   const resetGame = () => {
     setBoard(Array(9).fill(null))
     setTurn(TURNS.X)
     setWinner(null)
-    setPlayerNames({
-      player1:{
-        name: 'Player 1',
-        symbol: TURNS.X
-      },
-      player2:{
-        name: 'Player 2',
-        symbol: TURNS.O
-      }  
-    })
-
-    resetGameFromStorage()
+    
+    resetBoardFromStorage()
   }
 
   return (
@@ -133,14 +125,14 @@ function App() {
                 type='text'
                 placeholder='Player 1'
                 value={playerNames.player1.name}
-                onChange={(e) => setPlayerNames({ ...playerNames, player1: { ...playerNames.player1, name: e.target.value } })}
+                onChange={(e) => updatePlayerNames({ ...playerNames, player1: { ...playerNames.player1, name: e.target.value } })}
               />
               <span className='vs'>vs</span>
               <input
                 type='text'
                 placeholder='Player 2'
                 value={playerNames.player2.name}
-                onChange={(e) => setPlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
+                onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
               />
             </section>
             
@@ -152,7 +144,7 @@ function App() {
               >
                 Reset game
               </button>
-              <button onClick={closeGame}>Close Game</button>
+              <button onClick={closeGame}>End Game</button>
             </section>
             <WinnerModal winner={winner} winnerName={winnerName} resetGame={resetGame} />
           </section>
