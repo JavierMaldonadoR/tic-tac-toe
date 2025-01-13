@@ -8,19 +8,6 @@ import { saveBoardFromStorage, resetBoardFromStorage, savePlayerNamesFromStorage
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
-
-  const startGame = () => {
-    setGameStarted(true)
-  }
-
-  const closeGame = () => {
-    setGameStarted(false)
-    resetPlayerNamesFromStorage()
-    updatePlayerNames(PLAYERS_NAMES)
-
-    resetGame()
-  }
-
   const [playerNames, setPlayerNames] = useState(() => {
     const playerNamesFromStorage = window.localStorage.getItem('playerNames')
     if (playerNamesFromStorage) {
@@ -44,15 +31,27 @@ function App() {
     if (turnFromStorage) return turnFromStorage
     return TURNS.X
   })
+
   const [winner, setWinner] = useState(null)
-  const [winnerName, setWinnerName] = useState(null);
+  const [winnerName, setWinnerName] = useState(null)
+
+  const startGame = () => {
+    setGameStarted(true)
+  }
+
+  const closeGame = () => {
+    setGameStarted(false)
+    resetPlayerNamesFromStorage()
+    updatePlayerNames(PLAYERS_NAMES)
+    resetGame()
+  }
 
   const checkEndGame = (newBoard) => {
     return newBoard.every((square) => square !== null)
   }
 
   const updateBoard = (index) => {
-    if (board[index] || winner) return;
+    if (board[index] || winner) return
     const newBoard = [...board]
     newBoard[index] = turn
     setBoard(newBoard)
@@ -82,7 +81,6 @@ function App() {
     setBoard(Array(9).fill(null))
     setTurn(TURNS.X)
     setWinner(null)
-    
     resetBoardFromStorage()
   }
 
