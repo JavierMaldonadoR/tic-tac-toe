@@ -57,6 +57,24 @@ body, html {
 
 .board button {
   padding: 8px 12px;
+  background: transparent;
+  border: 2px solid #eee;
+  color: #eee;
+  width: auto;
+  border-radius: 5px;
+  transition: 0.2s;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.board button span {
+  font-style: italic;
+  font-size: 12px;
+}
+
+.board .game-container button {
+  padding: 8px 12px;
   margin: 25px;
   background: transparent;
   border: 2px solid #eee;

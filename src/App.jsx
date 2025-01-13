@@ -92,6 +92,7 @@ function App() {
           <>
             <h2>Project inspired by @<a href="https://x.com/midudev">midudev</a> and made with React</h2>
             <span>Visit my site <a href="https://www.javiermaldonadorivera.com">javiermaldonadorivera.com</a></span>
+            <button className='disabled'>1 Player <span>(Coming soon...)</span></button>
             <button onClick={startGame}>2 Players</button>
           </>
         ) : (
