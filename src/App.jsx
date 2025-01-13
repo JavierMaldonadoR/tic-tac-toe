@@ -4,7 +4,7 @@ import { Square } from './components/Square.jsx'
 import { WinnerModal } from './components/WinnerModal.jsx'
 import { PLAYERS_NAMES, TURNS } from './constants.js'
 import { checkWinnerFrom } from './logic/board.js'
-import { saveBoardFromStorage, resetBoardFromStorage, savePlayerNamesFromStorage, resetPlayerNamesFromStorage } from './logic/storage/index.js'
+import { saveBoardFromStorage, resetBoardFromStorage, savePlayerNamesFromStorage, resetPlayerNamesFromStorage, saveScoreFromStorage, resetScoreFromStorage } from './logic/storage/index.js'
 
 function App() {
   const [gameStarted, setGameStarted] = useState(false)
@@ -32,6 +32,12 @@ function App() {
     return TURNS.X
   })
 
+  const [score, setScore] = useState(() => {
+    const scoreFromStorage = window.localStorage.getItem('score')
+    if (scoreFromStorage) return JSON.parse(scoreFromStorage)
+    return [0,0]
+  })
+
   const [winner, setWinner] = useState(null)
   const [winnerName, setWinnerName] = useState(null)
 
@@ -41,8 +47,13 @@ function App() {
 
   const closeGame = () => {
     setGameStarted(false)
+
     resetPlayerNamesFromStorage()
-    updatePlayerNames(PLAYERS_NAMES)
+    setPlayerNames(PLAYERS_NAMES)
+
+    resetScoreFromStorage()
+    setScore([0,0])
+
     resetGame()
   }
 
@@ -65,6 +76,17 @@ function App() {
     if (newWinner) {
       setWinner(newWinner)
       const newWinnerName = newWinner === playerNames.player1.symbol ? playerNames.player1.name : playerNames.player2.name
+      
+      const newScore = [...score]
+      if (newWinner === playerNames.player1.symbol) {
+        newScore[0] += 1
+      } else {
+        newScore[1] += 1
+      }
+      setScore(newScore)
+
+      saveScoreFromStorage(newScore)
+
       setWinnerName(newWinnerName)
       confetti()
     } else if (checkEndGame(newBoard)) {
@@ -120,6 +142,7 @@ function App() {
             </section>
 
             <section className='players'>
+              <span>W: <span>{ score[0] }</span></span>
               <input
                 type='text'
                 placeholder='Player 1'
@@ -133,6 +156,7 @@ function App() {
                 value={playerNames.player2.name}
                 onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
               />
+              <span>W: <span>{ score[1] }</span></span>
             </section>
             
             <section>

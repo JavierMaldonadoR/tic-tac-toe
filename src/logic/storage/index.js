@@ -15,3 +15,11 @@ export const savePlayerNamesFromStorage = (playerNames) => {
 export const resetPlayerNamesFromStorage = () => {
   window.localStorage.removeItem('playerNames')
 }
+
+export const saveScoreFromStorage = (score) => {
+  window.localStorage.setItem('score', JSON.stringify(score))
+}
+
+export const resetScoreFromStorage = () => {
+  window.localStorage.removeItem('score')
+}
