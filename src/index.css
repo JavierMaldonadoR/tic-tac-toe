@@ -87,6 +87,10 @@ body, html {
   font-size: 16px;
 }
 
+.board .game-container button.reset {
+  margin: 0 auto;
+}
+
 .board button:hover, .square:hover {
   background: #eee;
   color: #222;
@@ -97,6 +101,7 @@ body, html {
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
   width: fit-content;
+  margin-bottom: 20px;
 }
 
 .board .game-container {

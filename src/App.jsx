@@ -4,16 +4,28 @@ import { Square } from './components/Square.jsx'
 import { WinnerModal } from './components/WinnerModal.jsx'
 import { PLAYERS_NAMES, TURNS } from './constants.js'
 import { checkWinnerFrom } from './logic/board.js'
-import { saveBoardFromStorage, resetBoardFromStorage, savePlayerNamesFromStorage, resetPlayerNamesFromStorage, saveScoreFromStorage, resetScoreFromStorage } from './logic/storage/index.js'
+import { saveBoardToStorage, resetBoardFromStorage, savePlayerNamesToStorage, resetPlayerNamesFromStorage, saveScoreToStorage, resetScoreFromStorage, saveIsCpuMatchToStorage, resetIsCpuMatchFromStorage } from './logic/storage/index.js'
+import getNextMove from './logic/nextMove.js'
 
 function App() {
+
   const [gameStarted, setGameStarted] = useState(false)
+
+  const [isCpuMatch, setIsCpuMatch] = useState(() => {
+    const isCpuMatchFromStorage = window.localStorage.getItem('isCpuMatch')
+    if (isCpuMatchFromStorage) {
+      setGameStarted(true)
+      return isCpuMatchFromStorage
+    }
+    return false
+  })
+
   const [playerNames, setPlayerNames] = useState(() => {
     const playerNamesFromStorage = window.localStorage.getItem('playerNames')
     if (playerNamesFromStorage) {
       setGameStarted(true)
       return JSON.parse(playerNamesFromStorage)
-    } 
+    }
     return PLAYERS_NAMES
   })
 
@@ -35,7 +47,7 @@ function App() {
   const [score, setScore] = useState(() => {
     const scoreFromStorage = window.localStorage.getItem('score')
     if (scoreFromStorage) return JSON.parse(scoreFromStorage)
-    return [0,0]
+    return [0, 0]
   })
 
   const [winner, setWinner] = useState(null)
@@ -43,16 +55,26 @@ function App() {
 
   const startGame = () => {
     setGameStarted(true)
+    updatePlayerNames(PLAYERS_NAMES)
+  }
+
+  const startCpuGame = () => {
+    setIsCpuMatch(true)
+    saveIsCpuMatchToStorage(true)
+    startGame()
+    updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: 'CPU' } })
   }
 
   const closeGame = () => {
     setGameStarted(false)
+    setIsCpuMatch(false)
 
     resetPlayerNamesFromStorage()
+    resetIsCpuMatchFromStorage()
     setPlayerNames(PLAYERS_NAMES)
 
     resetScoreFromStorage()
-    setScore([0,0])
+    setScore([0, 0])
 
     resetGame()
   }
@@ -63,20 +85,26 @@ function App() {
 
   const updateBoard = (index) => {
     if (board[index] || winner) return
+
     const newBoard = [...board]
-    newBoard[index] = turn
-    setBoard(newBoard)
-
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X
-    setTurn(newTurn)
 
-    saveBoardFromStorage(newBoard, newTurn)
+    newBoard[index] = turn
+
+    if (isCpuMatch && newTurn === TURNS.O) {
+      newBoard[getNextMove(newBoard, turn)] = newTurn
+    }
+
+    setBoard(newBoard)
+    setTurn(isCpuMatch ? turn : newTurn)
+
+    saveBoardToStorage(newBoard, newTurn)
 
     const newWinner = checkWinnerFrom(newBoard)
     if (newWinner) {
       setWinner(newWinner)
       const newWinnerName = newWinner === playerNames.player1.symbol ? playerNames.player1.name : playerNames.player2.name
-      
+
       const newScore = [...score]
       if (newWinner === playerNames.player1.symbol) {
         newScore[0] += 1
@@ -85,7 +113,7 @@ function App() {
       }
       setScore(newScore)
 
-      saveScoreFromStorage(newScore)
+      saveScoreToStorage(newScore)
 
       setWinnerName(newWinnerName)
       confetti()
@@ -96,7 +124,7 @@ function App() {
 
   const updatePlayerNames = (playerNames) => {
     setPlayerNames(playerNames)
-    savePlayerNamesFromStorage(playerNames)
+    savePlayerNamesToStorage(playerNames)
   }
 
   const resetGame = () => {
@@ -114,8 +142,8 @@ function App() {
           <>
             <h2>Project inspired by @<a href="https://x.com/midudev">midudev</a> and made with React</h2>
             <span>Visit my site <a href="https://www.javiermaldonadorivera.com">javiermaldonadorivera.com</a></span>
-            <button className='disabled'>1 Player <span>(Coming soon...)</span></button>
-            <button onClick={startGame}>2 Players</button>
+            <button onClick={startCpuGame}>Vs CPU</button>
+            <button onClick={startGame}>VS Human</button>
           </>
         ) : (
           <section className='game-container'>
@@ -135,14 +163,18 @@ function App() {
               }
             </section>
 
-            <section className='turn'>
-              <span>Current Turn: </span>
-              {turn === TURNS.X ? playerNames.player1.name : playerNames.player2.name}
-              <Square isSelected={true}>{turn}</Square>
-            </section>
+            {
+              !isCpuMatch && (
+                <section className='turn'>
+                  <span>Current Turn: </span>
+                  {turn === TURNS.X ? playerNames.player1.name : playerNames.player2.name}
+                  <Square isSelected={true}>{turn}</Square>
+                </section>
+              )
+            }
 
             <section className='players'>
-              <span>W: <span>{ score[0] }</span></span>
+              <span>W: <span>{score[0]}</span></span>
               <input
                 type='text'
                 placeholder='Player 1'
@@ -150,19 +182,25 @@ function App() {
                 onChange={(e) => updatePlayerNames({ ...playerNames, player1: { ...playerNames.player1, name: e.target.value } })}
               />
               <span className='vs'>vs</span>
-              <input
-                type='text'
-                placeholder='Player 2'
-                value={playerNames.player2.name}
-                onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
-              />
-              <span>W: <span>{ score[1] }</span></span>
+              {
+                !isCpuMatch ? (
+                  <input
+                    type='text'
+                    placeholder='Player 2'
+                    value={playerNames.player2.name}
+                    onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
+                  />
+                ) : (
+                  <span>CPU</span>
+                )
+              }
+              <span>W: <span>{score[1]}</span></span>
             </section>
-            
+
             <section>
-              <button 
-                className={board.every(square => square === null) ? 'disabled' : ''} 
-                disabled={board.every(square => square === null)} 
+              <button
+                className={board.every(square => square === null) ? 'disabled' : ''}
+                disabled={board.every(square => square === null)}
                 onClick={resetGame}
               >
                 Reset game
