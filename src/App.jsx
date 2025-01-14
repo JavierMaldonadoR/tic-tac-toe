@@ -88,19 +88,22 @@ function App() {
 
     const newBoard = [...board]
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X
-
+  
     newBoard[index] = turn
 
-    if (isCpuMatch && newTurn === TURNS.O) {
+    let newWinner = checkWinnerFrom(newBoard)
+
+    if (isCpuMatch && newTurn === TURNS.O && newWinner === null) {
       newBoard[getNextMove(newBoard, turn)] = newTurn
     }
 
     setBoard(newBoard)
     setTurn(isCpuMatch ? turn : newTurn)
 
-    saveBoardToStorage(newBoard, newTurn)
+    saveBoardToStorage(newBoard, isCpuMatch ? turn : newTurn)
 
-    const newWinner = checkWinnerFrom(newBoard)
+    newWinner = checkWinnerFrom(newBoard)
+
     if (newWinner) {
       setWinner(newWinner)
       const newWinnerName = newWinner === playerNames.player1.symbol ? playerNames.player1.name : playerNames.player2.name
@@ -142,7 +145,7 @@ function App() {
           <>
             <h2>Project inspired by @<a href="https://x.com/midudev">midudev</a> and made with React</h2>
             <span>Visit my site <a href="https://www.javiermaldonadorivera.com">javiermaldonadorivera.com</a></span>
-            <button onClick={startCpuGame}>Vs CPU</button>
+            <button onClick={startCpuGame}>VS CPU</button>
             <button onClick={startGame}>VS Human</button>
           </>
         ) : (
@@ -181,19 +184,14 @@ function App() {
                 value={playerNames.player1.name}
                 onChange={(e) => updatePlayerNames({ ...playerNames, player1: { ...playerNames.player1, name: e.target.value } })}
               />
-              <span className='vs'>vs</span>
-              {
-                !isCpuMatch ? (
-                  <input
-                    type='text'
-                    placeholder='Player 2'
-                    value={playerNames.player2.name}
-                    onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
-                  />
-                ) : (
-                  <span>CPU</span>
-                )
-              }
+              <span className='vs'>VS</span>
+              <input
+                type='text'
+                disabled={isCpuMatch}
+                placeholder='Player 2'
+                value={playerNames.player2.name}
+                onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
+              />
               <span>W: <span>{score[1]}</span></span>
             </section>
 
