@@ -1,9 +1,9 @@
 import OpenAI from "openai";
 
 const openai = new OpenAI({
-  baseURL: 'https://api.deepseek.com',
-  apiKey: 'sk-eb4c1a34cf0c42b19b61a8c19676b374',
-  dangerouslyAllowBrowser: true
+  baseURL: 'https://api.deepseek.com/v1',
+  apiKey: import.meta.env.VITE_DEEPSEEK_API_KEY,
+  dangerouslyAllowBrowser: true //required for browser environments
 });
 
 export async function getNextMoveAI(board) {
@@ -46,13 +46,13 @@ export async function getNextMoveAI(board) {
 
     // Validate if the move is valid
     if (isNaN(move) || move < 0 || move > 8 || board[move] !== null) {
-      return null;
+      throw new Error('Invalid move returned by AI');
     }
 
     return move;
   } catch (error) {
     console.error('Error getting AI move:', error);
-    return null;
+    throw error;
   }
 }
 
