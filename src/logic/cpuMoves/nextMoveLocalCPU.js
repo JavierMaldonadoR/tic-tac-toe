@@ -1,23 +1,23 @@
-import { WINNER_COMBOS } from "../constants";
+import { WINNER_COMBOS } from "../../constants";
 
-export function getNextMove(board, player) {
-    const opponent = player === "×" ? "○" : "×";
+export function getNextMoveLocalCPU(board, turn) {
+    const opponent = turn === "×" ? "○" : "×";
   
     const winningCombos = WINNER_COMBOS
   
-    function findBestMove(currentPlayer) {
+    function findBestMove(currentTurn) {
       for (const combo of winningCombos) {
         const [a, b, c] = combo;
         const values = [board[a], board[b], board[c]];
   
-        if (values.filter(v => v === currentPlayer).length === 2 && values.includes(null)) {
+        if (values.filter(v => v === currentTurn).length === 2 && values.includes(null)) {
           return combo[values.indexOf(null)];
         }
       }
       return null;
     }
   
-    let move = findBestMove(player);
+    let move = findBestMove(turn);
     if (move !== null) return move;
   
     move = findBestMove(opponent);
@@ -38,4 +38,4 @@ export function getNextMove(board, player) {
     return null;
 }
   
-export default getNextMove;
+export default getNextMoveLocalCPU;

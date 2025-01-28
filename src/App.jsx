@@ -1,16 +1,26 @@
+// 1. IMPORTS
 import confetti from 'canvas-confetti'
 import { useState } from 'react'
 import { Square } from './components/Square.jsx'
 import { WinnerModal } from './components/WinnerModal.jsx'
 import { PLAYERS_NAMES, TURNS } from './constants.js'
 import { checkWinnerFrom } from './logic/board.js'
-import { saveBoardToStorage, resetBoardFromStorage, savePlayerNamesToStorage, resetPlayerNamesFromStorage, saveScoreToStorage, resetScoreFromStorage, saveIsCpuMatchToStorage, resetIsCpuMatchFromStorage } from './logic/storage/index.js'
-import getNextMove from './logic/nextMove.js'
+import { 
+  saveBoardToStorage, 
+  resetBoardFromStorage, 
+  savePlayerNamesToStorage, 
+  resetPlayerNamesFromStorage, 
+  saveScoreToStorage, 
+  resetScoreFromStorage, 
+  saveIsCpuMatchToStorage, 
+  resetIsCpuMatchFromStorage 
+} from './logic/storage/index.js'
+import { getNextMoveAI } from './logic/cpuMoves/nextMoveAI.js'
+import { getNextMoveLocalCPU } from './logic/cpuMoves/nextMoveLocalCPU.js'
 
 function App() {
-
+  // 2. STATES
   const [gameStarted, setGameStarted] = useState(false)
-
   const [isCpuMatch, setIsCpuMatch] = useState(() => {
     const isCpuMatchFromStorage = window.localStorage.getItem('isCpuMatch')
     if (isCpuMatchFromStorage) {
@@ -19,7 +29,6 @@ function App() {
     }
     return false
   })
-
   const [playerNames, setPlayerNames] = useState(() => {
     const playerNamesFromStorage = window.localStorage.getItem('playerNames')
     if (playerNamesFromStorage) {
@@ -28,7 +37,6 @@ function App() {
     }
     return PLAYERS_NAMES
   })
-
   const [board, setBoard] = useState(() => {
     const boardFromStorage = window.localStorage.getItem('board')
     if (boardFromStorage) {
@@ -37,22 +45,21 @@ function App() {
     }
     return Array(9).fill(null)
   })
-
   const [turn, setTurn] = useState(() => {
     const turnFromStorage = window.localStorage.getItem('turn')
     if (turnFromStorage) return turnFromStorage
     return TURNS.X
   })
-
   const [score, setScore] = useState(() => {
     const scoreFromStorage = window.localStorage.getItem('score')
     if (scoreFromStorage) return JSON.parse(scoreFromStorage)
     return [0, 0]
   })
-
   const [winner, setWinner] = useState(null)
   const [winnerName, setWinnerName] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
 
+  // 3. GAME START/END FUNCTIONS
   const startGame = () => {
     setGameStarted(true)
     updatePlayerNames(PLAYERS_NAMES)
@@ -68,45 +75,53 @@ function App() {
   const closeGame = () => {
     setGameStarted(false)
     setIsCpuMatch(false)
-
     resetPlayerNamesFromStorage()
     resetIsCpuMatchFromStorage()
     setPlayerNames(PLAYERS_NAMES)
-
     resetScoreFromStorage()
     setScore([0, 0])
-
     resetGame()
   }
 
+  // 4. GAME LOGIC FUNCTIONS
   const checkEndGame = (newBoard) => {
     return newBoard.every((square) => square !== null)
   }
 
-  const updateBoard = (index) => {
+  const updateBoard = async (index) => {
     if (board[index] || winner) return
 
     const newBoard = [...board]
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X
-  
-    newBoard[index] = turn
 
+    newBoard[index] = turn
+    setBoard(newBoard)
     let newWinner = checkWinnerFrom(newBoard)
 
-    if (isCpuMatch && newTurn === TURNS.O && newWinner === null) {
-      newBoard[getNextMove(newBoard, turn)] = newTurn
+    if (isCpuMatch && newTurn === TURNS.O && !newWinner) {
+      try {
+        setIsLoading(true)
+        const nextMove = await getNextMoveAI(newBoard)
+        setIsLoading(false)
+        newBoard[nextMove] = newTurn
+      } catch (error) {
+        setIsLoading(false)
+        console.error('Error getting AI move:', error)
+        const fallbackMove = getNextMoveLocalCPU(newBoard, newTurn)
+        newBoard[fallbackMove] = newTurn
+      }
     }
 
     setBoard(newBoard)
     setTurn(isCpuMatch ? turn : newTurn)
-
-    saveBoardToStorage(newBoard, isCpuMatch ? turn : newTurn)
+    saveBoardToStorage(newBoard, newTurn)
 
     newWinner = checkWinnerFrom(newBoard)
-
     if (newWinner) {
       setWinner(newWinner)
-      const newWinnerName = newWinner === playerNames.player1.symbol ? playerNames.player1.name : playerNames.player2.name
+      const newWinnerName = newWinner === playerNames.player1.symbol 
+        ? playerNames.player1.name 
+        : playerNames.player2.name
 
       const newScore = [...score]
       if (newWinner === playerNames.player1.symbol) {
@@ -115,9 +130,7 @@ function App() {
         newScore[1] += 1
       }
       setScore(newScore)
-
       saveScoreToStorage(newScore)
-
       setWinnerName(newWinnerName)
       confetti()
     } else if (checkEndGame(newBoard)) {
@@ -125,6 +138,7 @@ function App() {
     }
   }
 
+  // 5. UPDATE FUNCTIONS
   const updatePlayerNames = (playerNames) => {
     setPlayerNames(playerNames)
     savePlayerNamesToStorage(playerNames)
@@ -137,16 +151,18 @@ function App() {
     resetBoardFromStorage()
   }
 
+  // 6. RENDER
   return (
     <div className='container'>
       <main className='board'>
         <h1 className='title'>Tic Tac Toe</h1>
         {!gameStarted ? (
           <>
-            <h2>Project inspired by @<a href="https://x.com/midudev">midudev</a> and made with React</h2>
-            <span>Visit my site <a href="https://www.javiermaldonadorivera.com">javiermaldonadorivera.com</a></span>
-            <button onClick={startCpuGame}>VS CPU</button>
-            <button onClick={startGame}>VS Human</button>
+            <h2>Project inspired by @<a target="_blank" rel="noopener noreferrer" href="https://x.com/midudev">midudev</a> and made with React</h2>
+            <h2>CPU logic powered by <a target="_blank" rel="noopener noreferrer" href="https://deepseek.ai">DeepSeek</a> intelligence model</h2>
+            <span>Visit my site <a target="_blank" href="https://www.javiermaldonadorivera.com">javiermaldonadorivera.com</a></span>
+            <button onClick={startCpuGame}>1 Player (CPU)</button>
+            <button onClick={startGame}>2 Players (Human)</button>
           </>
         ) : (
           <section className='game-container'>
@@ -184,14 +200,19 @@ function App() {
                 value={playerNames.player1.name}
                 onChange={(e) => updatePlayerNames({ ...playerNames, player1: { ...playerNames.player1, name: e.target.value } })}
               />
-              <span className='vs'>VS</span>
-              <input
-                type='text'
-                disabled={isCpuMatch}
-                placeholder='Player 2'
-                value={playerNames.player2.name}
-                onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
-              />
+              <span className='vs'>vs</span>
+              {
+                !isCpuMatch ? (
+                  <input
+                    type='text'
+                    placeholder='Player 2'
+                    value={playerNames.player2.name}
+                    onChange={(e) => updatePlayerNames({ ...playerNames, player2: { ...playerNames.player2, name: e.target.value } })}
+                  />
+                ) : (
+                  <span>CPU</span>
+                )
+              }
               <span>W: <span>{score[1]}</span></span>
             </section>
 
@@ -206,6 +227,15 @@ function App() {
               <button onClick={closeGame}>End Game</button>
             </section>
             <WinnerModal winner={winner} winnerName={winnerName} resetGame={resetGame} />
+
+            {isLoading && (
+              <div className="loading-overlay">
+                <div className="loading-spinner">
+                  <div className="spinner"></div>
+                  <span>AI is thinking...</span>
+                </div>
+              </div>
+            )}
           </section>
         )}
       </main>
